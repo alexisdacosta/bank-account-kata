@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Account</title>
+</head>
+<body>
+    <h1>Bank Account Interface</h1>
+
+    <p>Enter your bank account id ?</p>
+    <input type="text" id="accountId" placeholder="Account ID" value="">
+    <button onclick="submit()">Submit</button>
+    
+    <div id="options" style="display: none;">
+        <br>
+        <button onclick="status()">Status</button>
+        <button onclick="isDeposit = true; submitAmount()">Deposit</button>
+        <button onclick="isDeposit = false; submitAmount()">Withdraw</button>
+        <br>
+    </div>
+    
+    <p id="amount" style="display: none;">
+        <input type="text" id="amountInput" placeholder="Amount" value="">
+        <button onclick="submit()">Submit</button>
+    </p>
+    <p id="res"></p>
+</body>
+<script>
+    let accountId = null;
+    let amount = null;
+    let isDeposit = false;
+
+    function submit(){
+        if (!accountId){
+            accountId = document.getElementById("accountId").value;
+            document.getElementById("options").style.display = "block";
+        }
+        else if (isDeposit){
+            amount = document.getElementById("amountInput").value;
+            deposit(amount);
+        }
+        else {
+            amount = document.getElementById("amountInput").value;
+            withdraw(amount);
+        }
+        amount = null;
+    }
+
+    function status(){
+        fetch("http://localhost:8080/account/" + accountId + "/status").then((data) => {
+            let result = data.json();
+            result.then((data) => {
+                var response = "Account ID: " + data.id + "<br>";
+                response += "Account Balance: " + data.balance + "<br>";
+                response += "Account Nb transaction: " + data.transactions.length + "<br>";
+                document.getElementById("res").innerHTML = response;
+            })
+        })
+    }
+
+    function submitAmount(){
+        document.getElementById("amount").style.display = "block";
+        if (!isDeposit){
+            document.getElementById("amountInput").placeholder = "Amount to withdraw";
+        }
+        else {
+            document.getElementById("amountInput").placeholder = "Amount to deposit";
+        }
+    }
+
+    function deposit(){
+        fetch("http://localhost:8080/account/" + accountId + "/deposit/" + amount, {method: 'POST'}).then((data) => {
+            if(data.ok) status();
+            else data.json().then((res) => { document.getElementById("res").innerHTML = "<b>Error : </b> " + res.error });
+        })
+    }
+
+    function withdraw(){
+        fetch("http://localhost:8080/account/" + accountId + "/withdraw/" + amount, {method: 'POST'}).then((data) => {
+            if(data.ok) status();
+            else data.json().then((res) => { document.getElementById("res").innerHTML = "<b>Error : </b> " + res.error });
+        })
+    }
+
+</script>
+</html>
